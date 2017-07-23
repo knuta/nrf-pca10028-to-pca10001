@@ -1,0 +1,28 @@
+#! /bin/sh
+
+# Convert a tree of build files from NRF51422 (PCA10028) to NRF51822 (PCA10001).
+#
+# In addition to all references to the board name in defines and file
+# names being renamed, the script also adjusts the memory sizes to
+# account for the NRF51822 only having 16 kB of RAM:
+#
+# RAM start: 0x20001870 -> 0x20001fe8
+# RAM size:  0x6790 -> 0x2018 (used by Keil and GCC)
+# RAM end:   0x20007fff -> 0x20003fff (used by IAR)
+#
+# This script has been tested with nRF SDK 12.3.0 and S130 SoftDevice 2.0.1.
+# The RAM values may be different for other softdevices.
+
+# Do in-place editing of the files
+find "$@" -type f -exec perl -pe '
+s/(NRF)51422/${1}51822/gi;
+s/(PCA)10028/${1}10001/gi;
+s/_xxac\b/_xxaa/g;
+s/_xxAC\b/_xxAA/g;
+s/\b0x20001870\b/0x20001fe8/g;
+s/\b0x6790\b/0x2018/g;
+s/\b0x20007fff\b/0x20003fff/g;
+' -i {} +
+
+# Rename the files
+find "$@" -type f -exec rename 's/pca10028/pca10001/g' {} +
